@@ -30,33 +30,39 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
-    try {
-      // Connect the client to the server
+  try {
       await client.connect();
-      const db = client.db('sample_analytics').collection('customers').aggregate([
-        {
-          $match: {
-            name: "Leslie Martinez",
-          },
+      console.log("Connected correctly to server");
+
+      const pipeline_A = [
+        {$match:{name: {$eq: "Leslie Martinez",},},},
+        {$project:{_id: 0,name: 1,email: 1,accounts: 1,},},
+      ];
+     
+      console.log("Pipeline A:");
+      const result_A = await client.db('sample_analytics').collection('customers').aggregate(pipeline_A).toArray();
+      console.log(result_A);
+
+      const pipeline_b = [
+        {$match:{name: "Leslie Martinez",},},
+        {$lookup:{
+              from: "accounts",
+              localField: "accounts",
+              foreignField: "account_id",
+              as: "accounts",
+            },
         },
-        {
-          $project: {
-            _id: 0,
-            name: 1,
-            email: 1,
-            accounts: 1,
-          },
-        },
-      ]).toArray(function(err, res) {
-        if (err) throw err;
-        console.log(JSON.stringify(res));
-        console.log(db);
-        client.close(); // Close the client here
-      });
-  
-    } catch (err) {
+      ]
+      
+      console.log("Pipeline B:");
+      const result_b = await client.db('sample_analytics').collection('customers').aggregate(pipeline_b).toArray();
+      console.log(result_b);
+
+  } catch (err) {
       console.log(err.stack);
-    }
+  } finally {
+      await client.close();
   }
-  
-  run().catch(console.dir);
+}
+
+run().catch(console.dir);
