@@ -57,7 +57,7 @@ async function run() {
       console.log("Pipeline B:");
       const result_b = await client.db('sample_analytics').collection('customers').aggregate(pipeline_b).toArray();
       console.log(result_b);
-
+      //console.log(JSON.stringify(result_b, 2));
   } catch (err) {
       console.log(err.stack);
   } finally {
